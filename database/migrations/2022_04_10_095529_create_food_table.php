@@ -22,7 +22,7 @@ return new class extends Migration
             $table->bigInteger('section_id')->unsigned();
             $table->foreign('section_id')->references('id')->on('sections');
 
-             $table->bigInteger('user_id')->unsigned();
+            $table->bigInteger('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users');
             $table->timestamps();
         });
