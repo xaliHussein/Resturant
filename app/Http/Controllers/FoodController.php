@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Food;
 use App\Traits\SendResponse;
+use App\Traits\UploadImage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use App\Traits\Pagination;
 
 class FoodController extends Controller
 {
-    use SendResponse;
+    use SendResponse,Pagination,UploadImage;
 
     public function addFood(Request $request){
         $request =$request->json()->all();
@@ -17,11 +19,10 @@ class FoodController extends Controller
             'section_id' => 'required',
             'name' => 'required',
             'price' => 'required',
-            // 'image' => 'required|mimes:jpeg,png,jpg,svg|max:2048',
+            "image" => 'required'
         ],[
            'name.required' => 'اسم الطعام مطلوب',
            'price.required' => 'سعر الطعام مطلوب',
-        //    'image.required' => 'الصور مطلوبة الحد الادنى لحجم الصورة 2 ميجا',
         ]);
         if($validator->fails()){
             return $this->send_response(400,'فشلة عملية انشاء الطعام',$validator->errors()->all());
@@ -30,7 +31,7 @@ class FoodController extends Controller
             'section_id'=>$request['section_id'],
             'name'=>$request['name'],
             'price'=>$request['price'],
-            // 'image'=>$request['image'],
+            'image'=>$this->uploadIamge($request['image'], '/image/image_food/'),
             'description'=>$request['description'],
             'user_id'=>auth()->user()->id
         ]);
@@ -38,8 +39,31 @@ class FoodController extends Controller
     }
     public function getFoods(Request $request){
         $request= $request->json()->all();
-        $foods= Food::where('section_id', $request['section_id'])->get();
-        return $this->send_response(200,'تم جلب الطعام بنجاح',[],$foods);
+        $validator = Validator::make($request, [
+            'section_id' => 'required|exists:food,section_id',
+        ]);
+
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة عملية احضار الطعام',$validator->errors(),[]);
+        }
+
+        $foods= Food::where('section_id', $request['section_id']);
+         if(isset($_GET)){
+            foreach($_GET as $key => $value){
+                if($key == 'skip' || $key=='limit' || $key=='query' || $key=='filter'){
+                    continue;
+                }else{
+                    $sort = $value == 'true' ? 'desc' : 'asc';
+                    $resturant->orderBy($key,$sort);
+                }
+            }
+        }
+        if (!isset($_GET['skip']))
+            $_GET['skip'] = 0;
+        if (!isset($_GET['limit']))
+            $_GET['limit'] = 10;
+        $res = $this->paging($foods,  $_GET['skip'],  $_GET['limit']);
+        return $this->send_response(200,'تم جلب الطعام بنجاح',[], $res["model"], null, $res["count"]);
     }
     public function updateFood(Request $request){
         $request= $request->json()->all();
@@ -69,6 +93,24 @@ class FoodController extends Controller
         }else{
             return $this->send_response(400,'فشلة عملية تعديل الطعام','ليس لديك هذه الصلاحية',[]);
         }
-
+    }
+    public function clientManagementFoods(){
+        $foods=Food::where('user_id',auth()->user()->id);
+        if(isset($_GET)){
+            foreach($_GET as $key => $value){
+                if($key == 'skip' || $key=='limit' || $key=='query' || $key=='filter'){
+                    continue;
+                }else{
+                    $sort = $value == 'true' ? 'desc' : 'asc';
+                    $foods->orderBy($key,$sort);
+                }
+            }
+        }
+         if (!isset($_GET['skip']))
+            $_GET['skip'] = 0;
+        if (!isset($_GET['limit']))
+            $_GET['limit'] = 6;
+        $res = $this->paging($foods,  $_GET['skip'],  $_GET['limit']);
+        return $this->send_response(200,'تم جلب الاقسام لصاحب المطعم',[],  $res["model"], null, $res["count"]);
     }
 }

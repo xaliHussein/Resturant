@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Resturant;
+use App\Models\Orders;
 use App\Traits\SendResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -60,9 +62,15 @@ class UsersController extends Controller
             return $this->send_response(400, 'هناك مشكلة تحقق من تطابق المدخلات', null, null, null);
         }
     }
-    public function count(){
-        $users= User::count();
-        return $this->send_response(200,'عدد المستخدمين',[],$users);
+    public function statisticss(){
+        $restaurants_active = Resturant::where('status_resturant',1)->count();
+        $restaurants_inactive = Resturant::where('status_resturant',0)->count();
+        $restaurants_block = Resturant::where('status_resturant',2)->count();
+        $users = User::all()->count();
+        $orders = Orders::count();
+        $statisticss = [];
+        array_push($statisticss,$restaurants_active,$restaurants_inactive,$restaurants_block,$users,$orders);
+        return $this->send_response(200,'عدد المستخدمين',[],$statisticss);
     }
 
 }

@@ -49,4 +49,7 @@ class User extends Authenticatable
     public function resturant(){
         return $this->hasOne(Resturant::class,'user_id');
     }
+      public function sections(){
+        return $this->hasMany(Sections::class,'user_id');
+    }
 }

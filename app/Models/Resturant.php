@@ -9,7 +9,7 @@ class Resturant extends Model
 {
     use HasFactory;
     protected $guarded = [];
-     protected $with = ['user'];
+    protected $with = ['user'];
 
     public function user(){
         return $this->belongsTo(User::class,'user_id');
@@ -18,4 +18,7 @@ class Resturant extends Model
     public function sections(){
         return $this->hasMany(Sections::class,'resturant_id');
     }
+    protected $casts = [
+        'food_type'=>'array',
+    ];
 }
