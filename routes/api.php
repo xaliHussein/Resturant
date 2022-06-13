@@ -20,12 +20,18 @@ use Illuminate\Support\Facades\Broadcast;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+
+Broadcast::routes(['middleware' => ['auth:api']]);
  route::post('add_user',[UsersController::class,'addUser']);
  route::post('login',[UsersController::class,'login']);
+//  route::get('problem',[UsersController::class,'problem'])->name('problem');
+ route::post('get_number_phone',[UsersController::class,'getNumberPhone']);
+ route::post('verify_authentication',[UsersController::class,'verifyAuthentication']);
+ route::post('send_code_again',[UsersController::class,'sendCodeAgain']);
+
 
 Route::middleware(['auth:api'])->group(function () {
-    Broadcast::routes(['middleware' => ['auth:api']]);
-
     route::post('add_resturant',[ResturantController::class,'addResturant']);
     route::get('get_resturant',[ResturantController::class,'getResturants']);
 
@@ -55,6 +61,7 @@ Route::middleware(['auth:api'])->group(function () {
         route::get('get_banned_restaurant',[ResturantController::class,'getBannedRestaurants']);
         route::put('restaurant_status_activate',[ResturantController::class,'restaurantStatusActivate']);
         route::put('restaurant_status_shutdown',[ResturantController::class,'restaurantStatusShutdown']);
+        route::put('restaurant_cancel_ban',[ResturantController::class,'restaurantCancelBan']);
         route::get('statisticss',[UsersController::class,'statisticss']);
     });
 });

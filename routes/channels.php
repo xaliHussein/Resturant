@@ -27,3 +27,6 @@ Broadcast::channel("resturant_admin_socket.{user_id}",function($user,$user_id){
 Broadcast::channel("resturant_socket",function(){
     return true;
 });
+Broadcast::channel("resturant_status_socket",function(){
+    return true;
+});

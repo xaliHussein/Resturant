@@ -32,6 +32,9 @@ class ResturantSocket implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('resturant_socket');
+        return [
+            new PrivateChannel('resturant_socket'),
+            new PrivateChannel('resturant_status_socket'),
+        ];
     }
 }

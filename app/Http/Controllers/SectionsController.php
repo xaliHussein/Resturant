@@ -19,7 +19,7 @@ class SectionsController extends Controller
         $request = $request->json()->all();
         $validator = Validator::make($request,[
             'name'=>'required',
-            'resturant_id'=>'required|exists:sections,resturant_id',
+            'resturant_id'=>'required|exists:resturants,id',
         ]);
         if($validator->fails()){
             return $this->send_response(400,'فشلة عملية انشاء قسم',$validator->errors(),[]);

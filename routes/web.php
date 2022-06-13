@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Events\MyEvent;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UsersController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,7 +17,6 @@ use App\Events\MyEvent;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/broadcast', function () {
-    broadcast(new MyEvent());
-});
 
+Route::get('sendSMS', [UsersController::class, 'test_number']);
+Route::get('Msession', [UsersController::class, 'Msession']);

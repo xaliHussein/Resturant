@@ -40,7 +40,7 @@ class FoodController extends Controller
     public function getFoods(Request $request){
         $request= $request->json()->all();
         $validator = Validator::make($request, [
-            'section_id' => 'required|exists:food,section_id',
+            'section_id' => 'required|exists:sections,id',
         ]);
 
         if($validator->fails()){

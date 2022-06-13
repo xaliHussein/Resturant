@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 class ResturantController extends Controller
 {
     use SendResponse,UploadImage,Pagination;
+    // اضافة مطعم جديد
     public function addResturant(Request $request){
         $request = $request->json()->all();
         if(empty(auth()->user()->resturant)){
@@ -74,6 +75,7 @@ class ResturantController extends Controller
             return $this->send_response(400,'لايمكنك انشاء مطعمين','لايمكنك انشاء مطعمين',null);
         }
     }
+    // احضار جميع المطاعم الفعاله
     public function getResturants(){
         $resturant = Resturant::where('status_resturant',1);
         if (isset($_GET['query'])) {
@@ -103,7 +105,7 @@ class ResturantController extends Controller
         $res = $this->paging($resturant,  $_GET['skip'],  $_GET['limit']);
         return $this->send_response(200,'تم جلب المطعم',[],  $res["model"], null, $res["count"]);
     }
-
+    // احضار جميع مطاعم غير فعاله
     public function getInactiveRestaurants(){
         $resturant = Resturant::where('status_resturant',0);
          if (isset($_GET['query'])) {
@@ -129,12 +131,13 @@ class ResturantController extends Controller
         $res = $this->paging($resturant,  $_GET['skip'],  $_GET['limit']);
         return $this->send_response(200,'تم جلب المطاعم الغير مفعله',[],  $res["model"], null, $res["count"]);
     }
+    // احضار مطاعم المحظوره
     public function getBannedRestaurants(){
-        $resturant = Resturant::where('status_resturant',2);
+        $banned_resturant = Resturant::where('status_resturant',2);
          if (isset($_GET['query'])) {
             $columns = Schema::getColumnListing('resturants');
             foreach ($columns as $column) {
-                $resturant->orWhere($column, 'LIKE', '%' . $_GET['query'] . '%');
+                $banned_resturant->orWhere($column, 'LIKE', '%' . $_GET['query'] . '%');
             }
         }
          if(isset($_GET)){
@@ -143,7 +146,7 @@ class ResturantController extends Controller
                     continue;
                 }else{
                     $sort = $value == 'true' ? 'desc' : 'asc';
-                    $resturant->orderBy($key,$sort);
+                    $banned_resturant->orderBy($key,$sort);
                 }
             }
         }
@@ -151,7 +154,7 @@ class ResturantController extends Controller
             $_GET['skip'] = 0;
         if (!isset($_GET['limit']))
             $_GET['limit'] = 10;
-        $res = $this->paging($resturant,  $_GET['skip'],  $_GET['limit']);
+        $res = $this->paging($banned_resturant,  $_GET['skip'],  $_GET['limit']);
         return $this->send_response(200,'تم جلب المطاعم المحظوره',[],  $res["model"], null, $res["count"]);
     }
     // تغير حالة مطعم الى تفعيل
@@ -195,9 +198,10 @@ class ResturantController extends Controller
         $resturant = Resturant::find($request['id']);
          $resturant->update([
             'status_resturant' => 2,
+            'status' => 0,
         ]);
 
-         $user=User::where('user_type',0)->first();
+        $user=User::where('user_type',0)->first();
             $notification = notifications::create([
                 'title' => 'تم ايقاف حسابك',
                 'body' => 'عذرا لقد  تم ايقاف حسابك بسبب عدم اتباعك لشروط الاستخدام',
@@ -215,6 +219,7 @@ class ResturantController extends Controller
         $client_resturant =Resturant::where('user_id',auth()->user()->id)->get();
         return $this->send_response(200,'تم جلب مطعم العميل',[],  $client_resturant);
     }
+    // تعديل حاله مطعم العميل
     public function clientManagementResturantStatus(Request $request){
         $request = request()->json()->all();
         $validator = Validator::make($request, [
@@ -224,7 +229,7 @@ class ResturantController extends Controller
             return $this->send_response(400, 'خطأ بالمدخلات', $validator->errors(), []);
         }
         $sections = Sections::where('resturant_id', $request["id"])->get();
-        if(!empty($sections)){
+        if(count($sections) > 0){
             $resturant = Resturant::find($request['id']);
             $resturant->update([
                 'status' => !$resturant->status,
@@ -233,19 +238,21 @@ class ResturantController extends Controller
         }else{
             return $this->send_response(400, 'فشلة العملية', 'يجب اضافة قسم واحد كحد ادنى للمطعم', []);
         }
+
     }
+    // تعديل بيانات مطعم العميل
     public function clientManagemenEditRestaurant(Request $request){
         $request = request()->json()->all();
         $validator = Validator::make($request,[
-                "id" => 'required|exists:resturants,id',
-                'name'=>'required:min:3|max:15|unique:resturants,name,'.$request['id'],
-                'location'=>'required',
-                'complement_location'=>'required',
-                'minimum_order'=>'required',
-                'food_type'=>'required',
-            ],[
-                'name.required'=>'ادخلت اسم مطعم موجود بالفعل',
-            ]);
+            "id" => 'required|exists:resturants,id',
+            'name'=>'required:min:3|max:15|unique:resturants,name,'.$request['id'],
+            'location'=>'required',
+            'complement_location'=>'required',
+            'minimum_order'=>'required',
+            'food_type'=>'required',
+        ],[
+            'name.required'=>'ادخلت اسم مطعم موجود بالفعل',
+        ]);
             if($validator->fails()){
                 return $this->send_response(400,'فشلة عملية تعديل مطعم',$validator->errors(),[]);
             }
@@ -263,6 +270,34 @@ class ResturantController extends Controller
                     'image'=> $this->uploadIamge($request['image'], '/image/logo_resturant/'),
                 ]);
             }
-            return $this->send_response(200,'تم تعديل مطعم بنجاح',[],Resturant::find($resturant->id));
+        return $this->send_response(200,'تم تعديل مطعم بنجاح',[],Resturant::find($resturant->id));
+    }
+    // الغاء الحظر عن مطعم العميل
+    public function restaurantCancelBan(Request $request){
+        $request = request()->json()->all();
+        $validator = Validator::make($request, [
+            "id" => 'required|exists:resturants,id',
+        ]);
+        if ($validator->fails()) {
+            return $this->send_response(400, 'خطأ بالمدخلات', $validator->errors(), []);
+        }
+        $resturant = Resturant::find($request['id']);
+        $resturant->update([
+            'status_resturant' => 1,
+        ]);
+        $user=User::where('user_type',0)->first();
+            $notification = notifications::create([
+                'title' => 'تم الغاء القيود عن حسابك',
+                'body' => 'تم فتح الحظر عن حسابك يمكنك الان بدء العمل',
+                'color' => 'green darken-1',
+                'icon' => 'store',
+                'link'=>null,
+                'to_user' =>  $resturant->user_id,
+                'from_user' =>$user->id,
+            ]);
+            broadcast(new NotificationSocket($notification,$resturant->user_id));
+            broadcast(new ResturantSocket($resturant));
+
+        return $this->send_response(200, 'تم تغيير حالة المستخدم بنجاح', [], Resturant::find($resturant->id));
     }
 }
