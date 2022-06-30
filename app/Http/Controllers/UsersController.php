@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Orders;
 use Twilio\Rest\Client;
 use App\Models\Resturant;
+use App\Models\Favorite;
 use App\Traits\SendResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -138,38 +139,10 @@ class UsersController extends Controller
         return $this->send_response(200,'تم جلب بيانات المستخدم',[], $user);
     }
 
-    public function test_number(){
-        $code = substr(str_shuffle("0123456789"), 0, 6);
-
-        $message = "Fast and easy Laravel with Twilio";
-        try {
-            $account_sid = env('TWILIO_SID');
-            $auth_token = env('TWILIO_TOKEN');
-            $twilio_number = env('TWILIO_FROM');
-
-            $client = new Client($account_sid, $auth_token);
-            $client->messages->create('+96407810238491', [
-                'from' => $twilio_number,
-                'body' => $message
-            ]);
-
-            dd('SMS Sent Successfully.');
-
-        } catch (\Exception $e) {
-            dd("Error: ". $e->getMessage());
-        }
+    public function getFavorite(){
+        $user=auth()->user()->id;
+        $get_favorite=Favorite::where('user_id',$user)->get();
+        return $this->send_response(200,'تم جلب المفضلة',[],$get_favorite);
     }
-    //  public function random_code()
-    // {
-    //     $code = substr(str_shuffle("0123456789"), 0, 6);
-    //     $get = Invoice::where('code_invoices', $code)->first();
-    //     if ($get) {
-    //         return $this->random_code();
-    //     } else {
-    //         return $code;
-    //     }
-    // }
-    public function problem(){
-        return 0;
-    }
+
 }

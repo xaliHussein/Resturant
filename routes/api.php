@@ -25,25 +25,31 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::routes(['middleware' => ['auth:api']]);
  route::post('add_user',[UsersController::class,'addUser']);
  route::post('login',[UsersController::class,'login']);
-//  route::get('problem',[UsersController::class,'problem'])->name('problem');
  route::post('get_number_phone',[UsersController::class,'getNumberPhone']);
  route::post('verify_authentication',[UsersController::class,'verifyAuthentication']);
  route::post('send_code_again',[UsersController::class,'sendCodeAgain']);
 
 
 Route::middleware(['auth:api'])->group(function () {
+    route::get('get_favorites',[UsersController::class,'getFavorite']);
+
     route::post('add_resturant',[ResturantController::class,'addResturant']);
     route::get('get_resturant',[ResturantController::class,'getResturants']);
 
     route::get('client_management_resturant',[ResturantController::class,'clientManagementResturant']);
     route::get('client_management_sections',[SectionsController::class,'clientManagementSections']);
     route::get('client_management_foods',[FoodController::class,'clientManagementFoods']);
+    route::delete('client_management_delete_foods',[FoodController::class,'clientManagementDeleteFoods']);
     route::put('client_management_resturant_status',[ResturantController::class,'clientManagementResturantStatus']);
     route::put('client_management_edit_sections',[SectionsController::class,'clientManagemenEditSection']);
     route::put('client_management_edit_restaurant',[ResturantController::class,'clientManagemenEditRestaurant']);
 
     route::post('add_section',[SectionsController::class,'addSection']);
     route::post('get_sections',[SectionsController::class,'getSections']);
+    route::post('get_info_restaurant',[SectionsController::class,'getInfoRestaurant']);
+    route::post('add_favorite',[SectionsController::class,'addFavorite']);
+    route::post('delete_favorite',[SectionsController::class,'deleteFavorite']);
+    route::post('get_favorite',[SectionsController::class,'getFavorite']);
     route::delete('delete_sections',[SectionsController::class,'deleteSections']);
 
     route::post('add_food',[FoodController::class,'addFood']);

@@ -78,6 +78,12 @@ class ResturantController extends Controller
     // احضار جميع المطاعم الفعاله
     public function getResturants(){
         $resturant = Resturant::where('status_resturant',1);
+        if (isset($_GET['filter'])) {
+            $filter = json_decode($_GET['filter']);
+            // return $filter;
+            $resturant->where($filter->name, $filter->value);
+        }
+
         if (isset($_GET['query'])) {
             $columns = Schema::getColumnListing('resturants');
             $resturant->whereHas('user', function ($query) {
@@ -108,7 +114,7 @@ class ResturantController extends Controller
     // احضار جميع مطاعم غير فعاله
     public function getInactiveRestaurants(){
         $resturant = Resturant::where('status_resturant',0);
-         if (isset($_GET['query'])) {
+        if (isset($_GET['query'])) {
             $columns = Schema::getColumnListing('resturants');
             foreach ($columns as $column) {
                 $resturant->orWhere($column, 'LIKE', '%' . $_GET['query'] . '%');

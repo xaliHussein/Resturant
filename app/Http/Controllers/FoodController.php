@@ -35,7 +35,7 @@ class FoodController extends Controller
             'description'=>$request['description'],
             'user_id'=>auth()->user()->id
         ]);
-        return $this->send_response(200,'تمت عملية انشاء الطعام بنجاح',[],$food);
+        return $this->send_response(200,'تمت عملية انشاء الطعام بنجاح',[],Food::find($food->id));
     }
     public function getFoods(Request $request){
         $request= $request->json()->all();
@@ -61,7 +61,7 @@ class FoodController extends Controller
         if (!isset($_GET['skip']))
             $_GET['skip'] = 0;
         if (!isset($_GET['limit']))
-            $_GET['limit'] = 10;
+            $_GET['limit'] = 6;
         $res = $this->paging($foods,  $_GET['skip'],  $_GET['limit']);
         return $this->send_response(200,'تم جلب الطعام بنجاح',[], $res["model"], null, $res["count"]);
     }
@@ -112,5 +112,16 @@ class FoodController extends Controller
             $_GET['limit'] = 6;
         $res = $this->paging($foods,  $_GET['skip'],  $_GET['limit']);
         return $this->send_response(200,'تم جلب الاقسام لصاحب المطعم',[],  $res["model"], null, $res["count"]);
+    }
+    public function clientManagementDeleteFoods(Request $request){
+        $request= $request->json()->all();
+        $validator = Validator::make($request, [
+            'id' => 'required|exists:food,id',
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة عملية حذف الطعام',$validator->errors()->all());
+        }
+        $food=Food::find($request['id'])->delete();
+        return $this->send_response(200,'تم حذف الطعام بنجاح',[],$food);
     }
 }

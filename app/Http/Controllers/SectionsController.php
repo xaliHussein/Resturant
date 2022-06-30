@@ -8,6 +8,7 @@ use App\Models\Food;
 use App\Traits\SendResponse;
 use App\Traits\Pagination;
 use App\Models\Resturant;
+use App\Models\Favorite;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,7 @@ class SectionsController extends Controller
 {
     use SendResponse,Pagination;
 
+    // اضافة قسم جديد
     public function addSection(Request $request){
         $request = $request->json()->all();
         $validator = Validator::make($request,[
@@ -31,6 +33,7 @@ class SectionsController extends Controller
         ]);
         return $this->send_response(200,'تم انشاء القسم بنجاح',[], $section);
     }
+    // احضار الاقسام حسب المطعم
     public function getSections(Request $request){
         $request = $request->json()->all();
          $validator = Validator::make($request,[
@@ -44,6 +47,7 @@ class SectionsController extends Controller
         return $this->send_response(200,'تم جلب الاقسام بنجاح',[], $sections);
     }
 
+    // تعديل على القسم
     public function clientManagemenEditSection(Request $request){
         $request = $request->json()->all();
         $validator = Validator::make($request,[
@@ -59,6 +63,53 @@ class SectionsController extends Controller
         return $this->send_response(200,'تم تعديل القسم بنجاح',[], Sections::find($request['id']));
 
     }
+    // احضار بيانات المطعم
+    public function getInfoRestaurant(Request $request){
+        $request = $request->json()->all();
+        $validator = Validator::make($request,[
+            'name'=>'required|exists:resturants,name',
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة عملية',$validator->errors(),[]);
+        }
+        $resturant = Resturant::where('name', $request['name'])->first();
+        return $this->send_response(200,'تم جلب المطعم بنجاح',[], $resturant);
+    }
+
+    public function getFavorite(Request $request){
+        $get_favorite=Resturant::where('name',$request['name'])
+        ->with('userFavorite')->first();
+        return $this->send_response(200,'تم جلب المفضله بنجاح',[], $get_favorite);
+    }
+    // اضافة المطعم الى المفضله
+    public function addFavorite(Request $request){
+        $request = $request->json()->all();
+        $validator = Validator::make($request,[
+            'resturant_id'=>'required|exists:resturants,id',
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة عملية',$validator->errors(),[]);
+        }
+        $favorite=Favorite::create([
+            'user_id'=>auth()->user()->id,
+            'resturant_id'=>$request['resturant_id'],
+        ]);
+        return $this->send_response(200,'تم اضافة المطعم الى المفضله',[], $favorite);
+    }
+    // حذف المطعم الى المفضله
+    public function deleteFavorite(Request $request){
+        $request = $request->json()->all();
+        $validator = Validator::make($request,[
+            'resturant_id'=>'required|exists:resturants,id',
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة عملية',$validator->errors(),[]);
+        }
+        $delete_favorite=Favorite::where('user_id',auth()->user()->id)->where('resturant_id',$request['resturant_id'])->first();
+        $delete_favorite->delete();
+        return $this->send_response(200,'تم حذف المطعم من المفضله',[], $delete_favorite);
+    }
+    // احضار الاقسام في صفحة ادارة المطعم
     public function clientManagementSections(){
         $sections=Sections::where('user_id',auth()->user()->id);
         if (isset($_GET['query'])) {
@@ -84,6 +135,7 @@ class SectionsController extends Controller
         $res = $this->paging($sections,  $_GET['skip'],  $_GET['limit']);
         return $this->send_response(200,'تم جلب الاقسام لصاحب المطعم',[],  $res["model"], null, $res["count"]);
     }
+    // حذف قسم مع الطعام
     public function deleteSections(Request $request){
         $request = $request->json()->all();
         $validator = Validator::make($request,[

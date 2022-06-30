@@ -17,6 +17,3 @@ use App\Http\Controllers\UsersController;
 Route::get('/', function () {
     return view('welcome');
 });
-
-Route::get('sendSMS', [UsersController::class, 'test_number']);
-Route::get('Msession', [UsersController::class, 'Msession']);
