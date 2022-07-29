@@ -53,7 +53,6 @@ class ResturantController extends Controller
                 'body' => 'سوف يتم مراجعة طلبك خلال 24 ساعة',
                 'color' => 'orange darken-2',
                 'icon' => 'folder-clock',
-                'link'=>null,
                 'to_user' =>  auth()->user()->id,
                 'from_user' =>$user->id,
             ]);
@@ -63,7 +62,6 @@ class ResturantController extends Controller
                 'body' => 'لديك طلب جديد',
                 'color' => 'orange darken-2',
                 'icon' => 'folder-multiple',
-                'link'=>null,
                 'to_user' =>  $user->id,
                 'from_user' =>$resturant->user_id,
             ]);
@@ -183,7 +181,6 @@ class ResturantController extends Controller
                 'body' => 'تم الموافقة على طلبك يمكنك الان استقبال طلبات الزبائن',
                 'color' => 'green darken-1',
                 'icon' => 'check-circle',
-                'link'=>null,
                 'to_user' =>  $resturant->user_id,
                 'from_user' =>$user->id,
             ]);
@@ -213,7 +210,6 @@ class ResturantController extends Controller
                 'body' => 'عذرا لقد  تم ايقاف حسابك بسبب عدم اتباعك لشروط الاستخدام',
                 'color' => 'red darken-1',
                 'icon' => 'minus-circle',
-                'link'=>null,
                 'to_user' =>  $resturant->user_id,
                 'from_user' =>$user->id,
             ]);
@@ -297,7 +293,6 @@ class ResturantController extends Controller
                 'body' => 'تم فتح الحظر عن حسابك يمكنك الان بدء العمل',
                 'color' => 'green darken-1',
                 'icon' => 'store',
-                'link'=>null,
                 'to_user' =>  $resturant->user_id,
                 'from_user' =>$user->id,
             ]);

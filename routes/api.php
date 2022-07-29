@@ -55,9 +55,11 @@ Route::middleware(['auth:api'])->group(function () {
     route::post('add_food',[FoodController::class,'addFood']);
     route::post('get_foods',[FoodController::class,'getFoods']);
     route::post('update_food',[FoodController::class,'updateFood']);
+    route::post('get_custom_foods',[FoodController::class,'getCustomFoods']);
 
     route::post('add_order',[OrdersController::class,'addOrder']);
     route::get('get_orders',[OrdersController::class,'getOrders']);
+    route::get('get_orders_resturant',[OrdersController::class,'getOrderResturant']);
 
     route::get('get_notifications',[NotificationsController::class,'getNotifications']);
     route::post('seen_notification',[NotificationsController::class,'seenNotification']);

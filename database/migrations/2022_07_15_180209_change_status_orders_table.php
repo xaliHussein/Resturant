@@ -13,11 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('favorites', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('resturant_id');
-            $table->timestamps();
+        Schema::table('orders', function (Blueprint $table) {
+            $table->integer('order_status')->change();
         });
     }
 
@@ -28,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('favorites');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->string('order_status')->change();
+        });
     }
 };

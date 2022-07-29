@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Food;
 use App\Models\Orders;
-use App\Models\Food_Orders;
+use App\Models\Resturant;
+use App\Models\FoodOrders;
+use App\Models\notifications;
+use App\Events\NotificationSocket;
+use App\Events\OrderSocket;
 use App\Traits\SendResponse;
 use App\Traits\Pagination;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 
 class OrdersController extends Controller
@@ -29,7 +34,7 @@ class OrdersController extends Controller
     {
         $request=$request->json()->all();
         $validator = Validator::make($request, [
-            'resturant_id' => 'required',
+            'resturant' => 'required',
             'foods_id.*.id' => 'required|exists:food,id',
             'foods_id.*.quantity' => 'required|Numeric',
             'address'=>'required|min:3|max:60',
@@ -38,17 +43,16 @@ class OrdersController extends Controller
         if ($validator->fails()) {
             return $this->send_response(400, 'فشلة عملية انشاء طلب',$validator->errors()->all());
         }
-
+        $resturant = Resturant::where('name',$request['resturant'])->first();
         $total_price=0;
         $data=[];
         $data=[
-            'resturant_id' => $request['resturant_id'],
+            'resturant_id' => $resturant->id,
             'user_id' => auth()->user()->id,
             'name_clint'=> auth()->user()->name,
             'phone_number'=> auth()->user()->phone_number,
             'address'=>$request['address'],
             'code_order'=> $this->random_code(),
-            'order_status'=>'قيد المراجعه',
             'payment_type'=> 'كاش'
         ];
 
@@ -66,18 +70,37 @@ class OrdersController extends Controller
         $orders= Orders::create($data);
 
         foreach ($foods_id as $key => $food_id) {
-            Food_Orders::create([
+            FoodOrders::create([
                 'food_id'=>$food_id,
                 'order_id'=>$orders->id,
                 'quantity'=>$request['foods_id'][$key]['quantity']
             ]);
         }
+        $notification_user = notifications::create([
+                'title' => 'طلبك قيد المراجعه',
+                'body' => 'تم ارسال طلبك الى المطعم',
+                'color' => 'orange',
+                'icon' => 'truck-fast',
+                'to_user' =>  auth()->user()->id,
+                'from_user' =>$resturant->user_id,
+            ]);
+        $notification_resturant = notifications::create([
+                'title' => 'لديك طلب جديد',
+                'body' => ' لديك طلب من'.auth()->user()->name,
+                'color' => 'orange',
+                'icon' => 'truck-fast',
+                'to_user' =>  $resturant->user_id,
+                'from_user' => auth()->user()->id,
+            ]);
+            broadcast(new NotificationSocket($notification_user,auth()->user()->id));
+            broadcast(new NotificationSocket($notification_resturant,$resturant->user_id));
+            broadcast(new OrderSocket($orders,$resturant->user_id));
         return $this->send_response(200, 'تمت عملية انشاء طلب بنجاح',[],Orders::find($orders->id));
     }
 
     public function getOrders(Request $request){
         if(isset($_GET['order_id'])){
-            $foods = Food_Orders::where('order_id',$_GET['order_id']);
+            $foods = FoodOrders::where('order_id',$_GET['order_id']);
             if(isset($_GET)){
                 foreach($_GET as $key => $value){
                     if($key == 'skip' || $key == 'limit' || $key == 'query' || $key == 'order_id'){
@@ -110,6 +133,39 @@ class OrdersController extends Controller
                 }
             }
         }
+        if(!isset($_GET['skip'])){
+            $_GET['skip'] = 0;
+        }
+        if(!isset($_GET['limit'])){
+            $_GET['limit'] = 10;
+        }
+        $response = $this->paging($orders,$_GET['skip'],$_GET['limit']);
+        return $this->send_response(200, 'تمت عملية جلب البيانات بنجاح',[],$response['model'],null,$response['count']);
+    }
+    public function getOrderResturant(){
+        $orders = Orders::where('resturant_id',auth()->user()->resturant->id);
+
+        if (isset($_GET['query'])) {
+            $columns = Schema::getColumnListing('orders');
+            $orders->whereHas('user', function ($query) {
+                $query->where('name', 'like', '%' . $_GET['query'] . '%');
+            });
+            foreach ($columns as $column) {
+                $orders->orWhere($column, 'LIKE', '%' . $_GET['query'] . '%');
+            }
+        }
+
+        if(isset($_GET)){
+            foreach($_GET as $key => $value){
+                if($key == 'skip' || $key == 'limit' || $key == 'query' || $key =='filter'){
+                    continue;
+                }else{
+                    $sort = $value == 'true' ? 'ace' : 'desc';
+                    $orders->orderBy($key, $sort);
+                }
+            }
+        }
+
         if(!isset($_GET['skip'])){
             $_GET['skip'] = 0;
         }

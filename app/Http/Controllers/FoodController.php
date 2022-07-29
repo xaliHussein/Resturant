@@ -124,4 +124,15 @@ class FoodController extends Controller
         $food=Food::find($request['id'])->delete();
         return $this->send_response(200,'تم حذف الطعام بنجاح',[],$food);
     }
+    public function getCustomFoods(Request $request){
+        $request= $request->json()->all();
+        $validator = Validator::make($request, [
+            'id' => 'required|exists:food,id',
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة عملية احضار الطعام',$validator->errors()->all());
+        }
+        $food=Food::find($request['id']);
+        return $this->send_response(200,'تم جلب الطعام بنجاح',[],$food);
+    }
 }

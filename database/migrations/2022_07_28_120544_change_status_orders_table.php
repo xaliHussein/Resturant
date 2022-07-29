@@ -13,9 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->string('color');
-            $table->string('icon');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->integer('order_status')->default(0)->change();
         });
     }
 
@@ -26,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::table('orders', function (Blueprint $table) {
+            $table->string('order_status')->change();
+        });
     }
 };

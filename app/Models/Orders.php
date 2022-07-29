@@ -9,12 +9,13 @@ class Orders extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    protected $with=['user','resturant','foods'];
     public function user(){
         return $this->belongsTo(User::class,'user_id');
     }
-    // public function foods(){
-    //     return $this->belongsToMany(Food::class,'order_foods','order_id','food_id');
-    // }
+    public function foods(){
+        return $this->hasMany(FoodOrders::class,'order_id');
+    }
     public function resturant(){
         return $this->belongsTo(Resturant::class,'resturant_id');
     }

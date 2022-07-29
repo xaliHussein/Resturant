@@ -10,7 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderSocket
+class OrderSocket implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,9 +19,12 @@ class OrderSocket
      *
      * @return void
      */
-    public function __construct()
+    public $order_resturant;
+    public $user_id;
+    public function __construct($order_resturant,$user_id)
     {
-        //
+        $this->order_resturant = $order_resturant;
+        $this->user_id = $user_id;
     }
 
     /**
@@ -31,6 +34,6 @@ class OrderSocket
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('channel-name');
+        return new PrivateChannel('order_socket.'.$this->user_id);
     }
 }
