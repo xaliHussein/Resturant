@@ -80,13 +80,13 @@ class OrdersController extends Controller
                 'title' => 'طلبك قيد المراجعه',
                 'body' => 'تم ارسال طلبك الى المطعم',
                 'color' => 'orange',
-                'icon' => 'truck-fast',
+                'icon' => 'clock',
                 'to_user' =>  auth()->user()->id,
                 'from_user' =>$resturant->user_id,
             ]);
         $notification_resturant = notifications::create([
                 'title' => 'لديك طلب جديد',
-                'body' => ' لديك طلب من'.auth()->user()->name,
+                'body' => '  لديك طلب من'.auth()->user()->name,
                 'color' => 'orange',
                 'icon' => 'truck-fast',
                 'to_user' =>  $resturant->user_id,
@@ -139,10 +139,33 @@ class OrdersController extends Controller
         if(!isset($_GET['limit'])){
             $_GET['limit'] = 10;
         }
-        $response = $this->paging($orders,$_GET['skip'],$_GET['limit']);
+        $response = $this->paging($orders->orderBy("created_at", "DESC"),$_GET['skip'],$_GET['limit']);
         return $this->send_response(200, 'تمت عملية جلب البيانات بنجاح',[],$response['model'],null,$response['count']);
     }
     public function getOrderResturant(){
+         if(isset($_GET['order_id'])){
+            $foods = FoodOrders::where('order_id',$_GET['order_id']);
+            if(isset($_GET)){
+                foreach($_GET as $key => $value){
+                    if($key == 'skip' || $key == 'limit' || $key == 'query' || $key == 'order_id'){
+                        continue;
+                    }else{
+                        $sort = $value == 'true' ? 'ace' : 'desc';
+                        $foods->orderBy($key, $sort);
+                    }
+                }
+            }
+
+            if(!isset($_GET['skip'])){
+                $_GET['skip'] = 0;
+            }
+            if(!isset($_GET['limit'])){
+                $_GET['limit'] = 20;
+            }
+            $response = $this->paging($foods,$_GET['skip'],$_GET['limit']);
+            return $this->send_response(200, 'تمت عملية جلب البيانات بنجاح',[],$response['model'],null,$response['count']);
+        }
+
         $orders = Orders::where('resturant_id',auth()->user()->resturant->id);
 
         if (isset($_GET['query'])) {
@@ -174,5 +197,57 @@ class OrdersController extends Controller
         }
         $response = $this->paging($orders,$_GET['skip'],$_GET['limit']);
         return $this->send_response(200, 'تمت عملية جلب البيانات بنجاح',[],$response['model'],null,$response['count']);
+    }
+    public function acceptOrder(Request $request){
+        $request=$request->json()->all();
+         $validator = Validator::make($request, [
+            'id' => 'required|exists:orders,id',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->send_response(400, 'فشلة عملية انشاء طلب',$validator->errors()->all());
+        }
+        $order=Orders::find($request['id']);
+        $order->update([
+            'order_status'=> 1
+        ]);
+
+        $notification_user = notifications::create([
+                'title' => 'تم قبول طلبك',
+                'body' => 'تم قبول طلبك من المطعم ',
+                'color' => 'orange',
+                'icon' => 'truck-fast',
+                'to_user' =>  $order->user_id,
+                'from_user' =>auth()->user()->id,
+            ]);
+         broadcast(new NotificationSocket($notification_user,$order->user_id));
+         broadcast(new OrderSocket($order,$order->user_id));
+         return $this->send_response(200, 'تم تعديل حالة الطلب',[],Orders::find($order->id));
+    }
+    public function rejectOrder(Request $request){
+        $request=$request->json()->all();
+         $validator = Validator::make($request, [
+            'id' => 'required|exists:orders,id',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->send_response(400, 'فشلة عملية انشاء طلب',$validator->errors()->all());
+        }
+        $order=Orders::find($request['id']);
+        $order->update([
+            'order_status'=> 3
+        ]);
+
+        $notification_user = notifications::create([
+                'title' => 'تم رفض طلبك',
+                'body' => 'تم رفض طلبك من المطعم ',
+                'color' => 'red darken-4',
+                'icon' => 'close',
+                'to_user' =>  $order->user_id,
+                'from_user' =>auth()->user()->id,
+            ]);
+         broadcast(new NotificationSocket($notification_user,$order->user_id));
+         broadcast(new OrderSocket($order,$order->user_id));
+         return $this->send_response(200, 'تم تعديل حالة الطلب',[],Orders::find($order->id));
     }
 }

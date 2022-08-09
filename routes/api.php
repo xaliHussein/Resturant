@@ -31,7 +31,8 @@ Broadcast::routes(['middleware' => ['auth:api']]);
 
 
 Route::middleware(['auth:api'])->group(function () {
-    route::get('get_favorites',[UsersController::class,'getFavorite']);
+    route::get('get_favorites_list',[UsersController::class,'getFavoriteList']);
+    route::put('user_name_change',[UsersController::class,'userNameChange']);
 
     route::post('add_resturant',[ResturantController::class,'addResturant']);
     route::get('get_resturant',[ResturantController::class,'getResturants']);
@@ -60,6 +61,8 @@ Route::middleware(['auth:api'])->group(function () {
     route::post('add_order',[OrdersController::class,'addOrder']);
     route::get('get_orders',[OrdersController::class,'getOrders']);
     route::get('get_orders_resturant',[OrdersController::class,'getOrderResturant']);
+    route::post('accept_order',[OrdersController::class,'acceptOrder']);
+    route::post('reject_order',[OrdersController::class,'rejectOrder']);
 
     route::get('get_notifications',[NotificationsController::class,'getNotifications']);
     route::post('seen_notification',[NotificationsController::class,'seenNotification']);

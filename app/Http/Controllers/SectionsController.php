@@ -75,7 +75,7 @@ class SectionsController extends Controller
         $resturant = Resturant::where('name', $request['name'])->first();
         return $this->send_response(200,'تم جلب المطعم بنجاح',[], $resturant);
     }
-
+    // احضار المفضله لكل مطعم
     public function getFavorite(Request $request){
         $get_favorite=Resturant::where('name',$request['name'])
         ->with('userFavorite')->first();

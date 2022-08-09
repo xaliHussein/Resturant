@@ -10,17 +10,17 @@ class Favorite extends Model
     use HasFactory;
     protected $guarded = [];
     protected $table = 'favorites';
-    // protected $with = ['user','resturant'];
+    protected $with = ['resturant'];
 
     // public function user()
     // {
     //     return $this->belongsTo(User::class, 'user_id');
     // }
-    // public function resturant()
-    // {
-    //     return $this->belongsTo(Resturant::class, 'resturant_id');
-    // }
-    public function favouriteable(){
-        return $this->morphTo();
+    public function resturant()
+    {
+        return $this->belongsTo(Resturant::class, 'resturant_id');
     }
+    // public function favouriteable(){
+    //     return $this->morphTo();
+    // }
 }

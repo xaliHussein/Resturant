@@ -9,14 +9,16 @@ use Twilio\Rest\Client;
 use App\Models\Resturant;
 use App\Models\Favorite;
 use App\Traits\SendResponse;
+use App\Traits\Pagination;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 
 class UsersController extends Controller
 {
-    use SendResponse;
+    use SendResponse, Pagination;
     public function sendCode($phone_number)
     {
         $random_code= substr(str_shuffle("0123456789"), 0, 6);
@@ -139,10 +141,48 @@ class UsersController extends Controller
         return $this->send_response(200,'تم جلب بيانات المستخدم',[], $user);
     }
 
-    public function getFavorite(){
-        $user=auth()->user()->id;
-        $get_favorite=Favorite::where('user_id',$user)->get();
-        return $this->send_response(200,'تم جلب المفضلة',[],$get_favorite);
+    // احضار قائمة المفضله للمستخدم
+    public function getFavoriteList(){
+        $favorite = Favorite::where('user_id', auth()->user()->id);
+         if(isset($_GET)){
+            foreach($_GET as $key => $value){
+                if($key == 'skip' || $key=='limit' || $key=='query' || $key=='filter'){
+                    continue;
+                }else{
+                    $sort = $value == 'true' ? 'desc' : 'asc';
+                    $favorite->orderBy($key,$sort);
+                }
+            }
+        }
+         if (!isset($_GET['skip']))
+            $_GET['skip'] = 0;
+        if (!isset($_GET['limit']))
+            $_GET['limit'] = 10;
+        $res = $this->paging($favorite,  $_GET['skip'],  $_GET['limit']);
+        return $this->send_response(200,'تم جلب المفضلة',[],$res["model"], null, $res["count"]);
+    }
+    public function userNameChange(Request $request){
+         $request= $request->json()->all();
+          $validator = Validator::make($request,[
+            'user_name'=>'required:min:3|max:15|unique:users,user_name,'.auth()->user()->id,
+            'password'=>'required|min:6|max:20',
+        ],[
+            'user_name.required'=>'اسم المستخدم مطلوب',
+            'password.required'=>'كلمة المرور مطلوبة'
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة العملية',$validator->errors(),[]);
+        }
+       if(Hash::check($request['password'],auth()->user()->password)){
+            $user = User::find(auth()->user()->id);
+            $user->update([
+                'user_name'=>$request['user_name']
+            ]);
+             return $this->send_response(200,'تمت العملية بنجاح',[], User::find(auth()->user()->id));
+        }else{
+            return $this->send_response(400, 'هناك مشكلة تحقق من تطابق المدخلات', 'هناك مشكلة تحقق من تطابق المدخلات', null, null);
+        }
+
     }
 
 }
