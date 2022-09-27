@@ -33,6 +33,8 @@ Broadcast::routes(['middleware' => ['auth:api']]);
 Route::middleware(['auth:api'])->group(function () {
     route::get('get_favorites_list',[UsersController::class,'getFavoriteList']);
     route::put('user_name_change',[UsersController::class,'userNameChange']);
+    route::put('password_change',[UsersController::class,'passwordChange']);
+    route::put('number_phone_change',[UsersController::class,'numberPhoneChange']);
 
     route::post('add_resturant',[ResturantController::class,'addResturant']);
     route::get('get_resturant',[ResturantController::class,'getResturants']);

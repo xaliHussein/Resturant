@@ -64,7 +64,6 @@ class UsersController extends Controller
             'phone_number'=>$request['phone_number'],
             'password'=>bcrypt($request['password'])
         ]);
-        // $token= $user->createToken('resturant')->accessToken;
         return $this->send_response(200,'تم اضافة الحساب بنجاح',[], User::find($user->id));
     }
     public function verifyAuthentication(Request $request){
@@ -112,9 +111,9 @@ class UsersController extends Controller
             return $this->send_response(400,'فشل عملية تسجيل الدخول',$validator->errors(),[]);
         }
         if(auth()->attempt(array('user_name'=> $request['user_name'], 'password'=> $request['password']))){
-            $user =auth()->user();
-            $token= $user->createToken('resturant')->accessToken;
-            return $this->send_response(200,'تم تسجيل الدخول بنجاح',[], $user, $token);
+            $user=auth()->user();
+                $token= $user->createToken('resturant')->accessToken;
+                return $this->send_response(200,'تم تسجيل الدخول بنجاح',[], $user, $token);
         }else{
             return $this->send_response(400, 'هناك مشكلة تحقق من تطابق المدخلات', null, null, null);
         }
@@ -182,7 +181,51 @@ class UsersController extends Controller
         }else{
             return $this->send_response(400, 'هناك مشكلة تحقق من تطابق المدخلات', 'هناك مشكلة تحقق من تطابق المدخلات', null, null);
         }
+    }
 
+    public function passwordChange(Request $request){
+         $request= $request->json()->all();
+          $validator = Validator::make($request,[
+            'old_password'=>'required:min:3|max:15',
+            'new_password'=>'required|min:3|max:15',
+        ],[
+            'old_password.required'=>'كلمة المرور القديمة مطلوبة',
+            'new_password.required'=>'كلمة المرور الجديدة مطلوبة'
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة العملية',$validator->errors(),[]);
+        }
+       if(Hash::check($request['old_password'],auth()->user()->password)){
+            $user = User::find(auth()->user()->id);
+            $user->update([
+                'password'=>bcrypt($request['new_password'])
+            ]);
+            return $this->send_response(200,'تمت العملية بنجاح',[],[]);
+        }else{
+            return $this->send_response(400, 'فشلة العملية', 'هناك مشكلة تحقق من تطابق المدخلات', null, null);
+        }
+    }
+    public function numberPhoneChange(Request $request){
+         $request= $request->json()->all();
+          $validator = Validator::make($request,[
+            'password'=>'required:min:3|max:15',
+            'phone_number'=>'required|unique:users,phone_number',
+        ]);
+        if($validator->fails()){
+            return $this->send_response(400,'فشلة العملية',$validator->errors(),[]);
+        }
+       if(Hash::check($request['password'],auth()->user()->password)){
+            $user = User::find(auth()->user()->id);
+            $user->update([
+                'phone_number'=>$request['phone_number']
+            ]);
+            return $this->send_response(200,'تمت العملية بنجاح',[],[]);
+        }else{
+            return $this->send_response(400, 'فشلة العملية', 'هناك مشكلة تحقق من تطابق المدخلات', null, null);
+        }
+    }
+    public function test(){
+        $this->sendCode('+96407810238491');
     }
 
 }
